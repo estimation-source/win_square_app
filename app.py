@@ -25,14 +25,30 @@ load_css("assets/style.css")
 init_session_state()
 
 # Global Header Dashboard Summary
-col_h1, col_h2 = st.columns([3, 1])
+col_h1, col_h2, col_h3 = st.columns([2.5, 1, 1])
+
 with col_h1:
     client = st.session_state["client_info"]
-    st.markdown(f"### 🏢 **{client['name']}** &nbsp;&nbsp; <span style='font-size:14px; color:#64748b;'>{client['quotation_no']}</span>", unsafe_allow_html=True)
+    client_title = client['name'] if client['name'].strip() else "NEW CLIENT"
+    st.markdown(
+        f"### 🏢 **{client_title}** &nbsp;&nbsp; "
+        f"<span style='font-size:14px; color:#64748b;'>{client['quotation_no']}</span>", 
+        unsafe_allow_html=True
+    )
+
 with col_h2:
+    if st.button("🔄 Start New Quote", use_container_width=True):
+        st.session_state.clear()
+        st.rerun()
+
+with col_h3:
     total_val = sum(w["price"] * w["qty"] for w in st.session_state["window_designs"])
     total_qty = sum(w["qty"] for w in st.session_state["window_designs"])
-    st.markdown(f"<div style='text-align:right;'><b style='font-size:20px; color:#0f172a;'>₹{total_val:,.2f}</b><br><span style='font-size:12px; color:#64748b;'>Total Qty: {total_qty} Pcs</span></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='text-align:right;'><b style='font-size:20px; color:#0f172a;'>₹{total_val:,.2f}</b>"
+        f"<br><span style='font-size:12px; color:#64748b;'>Total Qty: {total_qty} Pcs</span></div>", 
+        unsafe_allow_html=True
+    )
 
 # Application Navigation Tabs
 tab_docs, tab_design, tab_pricing, tab_report = st.tabs([
