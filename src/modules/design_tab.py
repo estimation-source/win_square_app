@@ -1,6 +1,50 @@
 import streamlit as st
 from src.cad_engine import generate_window_cad
 
+# Dynamic Edit Dialog Function
+@st.dialog("✏️ Edit Window Design")
+def edit_window_dialog(index: int):
+    win = st.session_state["window_designs"][index]
+    
+    with st.form(f"edit_form_{index}"):
+        w_code = st.text_input("Window Code", value=win["code"])
+        w_qty = st.number_input("Quantity", min_value=1, value=win["qty"])
+        w_type = st.selectbox(
+            "Type", 
+            ["Fixed Glass", "2 Track Sliding", "Single Sash Casement", "Double Sash Casement"],
+            index=["Fixed Glass", "2 Track Sliding", "Single Sash Casement", "Double Sash Casement"].index(win["type"]) if win["type"] in ["Fixed Glass", "2 Track Sliding", "Single Sash Casement", "Double Sash Casement"] else 0
+        )
+        col1, col2 = st.columns(2)
+        with col1:
+            w_width = st.number_input("Width (MM)", min_value=100, max_value=10000, value=win["width"])
+        with col2:
+            w_height = st.number_input("Height (MM)", min_value=100, max_value=10000, value=win["height"])
+            
+        w_location = st.text_input("Location", value=win["location"])
+        w_series = st.text_input("Series", value=win["series"])
+        w_glass = st.text_input("Glass Spec", value=win["glass"])
+        w_color = st.text_input("Color", value=win.get("color", "WHITE"))
+        w_price = st.number_input("Total Price (₹)", value=float(win["price"]), step=100.0)
+
+        submitted = st.form_submit_button("💾 Save Changes", type="primary", use_container_width=True)
+        
+        if submitted:
+            st.session_state["window_designs"][index] = {
+                "code": w_code,
+                "qty": w_qty,
+                "location": w_location,
+                "series": w_series,
+                "glass": w_glass,
+                "color": w_color,
+                "width": w_width,
+                "height": w_height,
+                "type": w_type,
+                "price": w_price
+            }
+            st.toast(f"✅ {w_code} updated successfully!")
+            st.rerun()
+
+
 def render_design_tab():
     """Renders the Window CAD Grid & Configurator Tab."""
     
@@ -57,7 +101,7 @@ def render_design_tab():
             filtered_designs.append(d)
 
     if not filtered_designs:
-        st.warning("No window designs found matching your search filter.")
+        st.warning("No window designs found. Click '➕ Create New Design' to add one.")
         return
 
     # Render CAD Cards Grid (4 Columns per row)
@@ -83,7 +127,7 @@ def render_design_tab():
                         <div class="win-meta"><b>Location :</b> {win['location']}</div>
                         <div class="win-meta"><b>Series :</b> {win['series']}</div>
                         <div class="win-meta" style="margin-bottom:8px;"><b>Glass :</b> {win['glass']} 
-                            <span class="win-tag">{win['color']}</span>
+                            <span class="win-tag">{win.get('color', 'WHITE')}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px solid #f1f5f9; padding-top:8px;">
                             <span class="win-price">₹{win['price']:,.2f}</span>
@@ -95,7 +139,7 @@ def render_design_tab():
                 b1, b2 = st.columns(2)
                 with b1:
                     if st.button("✏️ Edit", key=f"edit_{original_index}", use_container_width=True):
-                        st.toast(f"Edit opened for {win['code']}")
+                        edit_window_dialog(original_index)
                 with b2:
                     if st.button("🗑️ Delete", key=f"del_{original_index}", use_container_width=True):
                         st.session_state["window_designs"].pop(original_index)
